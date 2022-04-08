@@ -1,6 +1,20 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / publishTo := Some("Artifactory Realm" at "https://flock.jfrog.io/artifactory/sbt-bazel")
+ThisBuild / publishTo := Some(
+  "Artifactory Realm" at "https://flock.jfrog.io/artifactory/sbt-bazel"
+)
+ThisBuild / credentials += (if (sys.env.get("CI").isDefined) {
+                              Credentials(
+                                "Artifactory Realm",
+                                "flock.jfrog.io",
+                                "github",
+                                sys.env("JFROG_TOKEN")
+                              )
+                            } else {
+                              Credentials(
+                                Path.userHome / ".sbt" / ".credentials"
+                              )
+                            })
 
 lazy val root = (project in file("."))
   .settings(
@@ -10,10 +24,5 @@ lazy val root = (project in file("."))
     publishMavenStyle := true,
     publish / skip := false,
     publishLocal / skip := false,
-    libraryDependencies ++= Seq("io.kevinlee" %% "just-semver" % "0.3.0"),
-    if(sys.env.get("CI").isDefined){
-      credentials += Credentials("Artifactory Realm", "flock.jfrog.io", "github", sys.env("JFROG_TOKEN"))
-    }else{
-      credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
-    }
+    libraryDependencies ++= Seq("io.kevinlee" %% "just-semver" % "0.3.0")
   )
