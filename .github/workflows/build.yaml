@@ -13,6 +13,7 @@ jobs:
         with:
           apps: sbt sbtn
 
+      - run: sbt compile
 
       - run: sbt "inspect publish"
 
