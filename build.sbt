@@ -13,5 +13,5 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq("io.kevinlee" %% "just-semver" % "0.3.0")
     publishTo := Some("Artifactory Realm" at "https://flock.jfrog.io/artifactory/sbt-bazel"),
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    credentials += Credentials("Artifactory Realm", "my.artifact.repo.net", "github", sys.env("JFROG_TOKEN"))
+    credentials += Credentials("Artifactory Realm", "flock.jfrog.io", "github", sys.env("JFROG_TOKEN"))
   )
