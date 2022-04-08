@@ -1,4 +1,4 @@
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "0.1.1-SNAPSHOT"
 
 ThisBuild / publishTo := Some(
   "Artifactory Realm" at "https://flock.jfrog.io/artifactory/sbt-bazel"
