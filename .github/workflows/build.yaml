@@ -8,14 +8,11 @@ jobs:
     env:
       JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
     steps:
+      - uses: actions/checkout@v1
+
       - name: Setup Sbt
         uses: coursier/setup-action@v1.2.0-M2
         with:
           apps: sbt sbtn
-
-      - run: echo $PWD
-      - run: ls -alh
-      - run: export
-      - run: sbt "show publishTo"
 
       - run: sbt publish
