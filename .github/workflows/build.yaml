@@ -12,4 +12,4 @@ jobs:
           apps: sbt sbtn
 
 
-      - run: sbt info
+      - run: sbt publish
