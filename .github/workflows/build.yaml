@@ -1,0 +1,15 @@
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Sbt
+        uses: coursier/setup-action@v1.2.0-M2
+        with:
+          apps: sbt sbtn
+
+
+      - run: sbt info
