@@ -1,4 +1,4 @@
-import just.semver.SemVer
+package community.flock.sbt
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 
@@ -24,14 +24,14 @@ final case class SourceFile(relativeLocation: Path, contents: String) {
   }
 }
 final case class Module private (
-  name: String,
-  dependencies: List[Dependency] = List.empty,
-  source: List[SourceFile] = List.empty,
-  dependsOn: Set[String] = Set.empty,
-  mainClass: Option[String] = None,
-  testFrameworks: List[String] = Nil,
-  scalaVersion: SemVer
-) {
+                                  name: String,
+                                  dependencies: List[Dependency] = List.empty,
+                                  source: List[SourceFile] = List.empty,
+                                  dependsOn: Set[String] = Set.empty,
+                                  mainClass: Option[String] = None,
+                                  testFrameworks: List[String] = Nil,
+                                  scalaVersion: String
+                                ) {
   def withSource(sourceFiles: SourceFile*): Module =
     copy(source = source ++ sourceFiles.toList)
 
@@ -41,7 +41,7 @@ final case class Module private (
   def withMainClass(mainClass: String): Module =
     copy(mainClass = Some(mainClass))
 
-  def withScalaversion(version: SemVer): Module =
+  def withScalaversion(version: String): Module =
     copy(scalaVersion = version)
 
   def withTestFramework(framework: String*): Module =
@@ -55,7 +55,7 @@ final case class Module private (
     val sb = new StringBuilder()
 
     sb.append(s"""lazy val $name = project.in(file("$modulePath"))\n""")
-    sb.append(s"""\t.settings(scalaVersion := "${scalaVersion.render}")\n""")
+    sb.append(s"""\t.settings(scalaVersion := "${scalaVersion}")\n""")
 
 
     if(dependencies.nonEmpty) {
@@ -77,10 +77,10 @@ final case class Module private (
 }
 
 object Module {
-  def apply(name: String): Module = Module(name, scalaVersion = SemVer.parseUnsafe("2.13.8"))
+  def apply(name: String): Module = Module(name, scalaVersion = "2.13.8")
 }
 
-final case class Build(modules: List[Module]) {
+final case class Build(modules: List[Module], sbtPlugins: List[String]) {
   def sbtDef = modules.map(_.sbtDef).mkString("\r\n\r\n")
   def writeFiles(to: Path): Unit = {
     Util.ensureDir(to)
@@ -90,6 +90,8 @@ final case class Build(modules: List[Module]) {
     val root = s"""lazy val root = project.in(file(".")).aggregate(${moduleNames.mkString(", ")})"""
     val buildSbt = sbtDef + "\n" + root
 
+    Util.ensureDir(to.resolve("project/plugins.sbt"))
+    Files.write(to.resolve("project/plugins.sbt"), sbtPlugins.mkString("\r\n").getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
     Files.write(to.resolve("build.sbt"), buildSbt.getBytes, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
   }
 }

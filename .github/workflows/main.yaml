@@ -1,8 +1,6 @@
+name: Main merge
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
 
@@ -19,4 +17,4 @@ jobs:
         with:
           apps: sbt sbtn
 
-      - run: sbt publish
+      - run: sbt test publishLocal it:test publish
