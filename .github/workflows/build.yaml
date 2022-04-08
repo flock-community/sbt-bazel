@@ -5,6 +5,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
     steps:
       - name: Setup Sbt
         uses: coursier/setup-action@v1.2.0-M2
