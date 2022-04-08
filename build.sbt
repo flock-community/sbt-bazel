@@ -12,6 +12,9 @@ lazy val root = (project in file("."))
     publishLocal / skip := false,
     libraryDependencies ++= Seq("io.kevinlee" %% "just-semver" % "0.3.0")
     publishTo := Some("Artifactory Realm" at "https://flock.jfrog.io/artifactory/sbt-bazel"),
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
-    credentials += Credentials("Artifactory Realm", "flock.jfrog.io", "github", sys.env("JFROG_TOKEN"))
+    if(sys.env.get("CI").isDefined){
+      credentials += Credentials("Artifactory Realm", "flock.jfrog.io", "github", sys.env("JFROG_TOKEN"))
+    }else{
+      credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
+    }
   )
