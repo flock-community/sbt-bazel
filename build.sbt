@@ -2,11 +2,11 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "sbt-bazel",
+    name := "sbt-bazel-install",
     organization := "community.flock",
     sbtPlugin := true,
     publishMavenStyle := true,
-    publishTo := Some("Artifactory Realm" at "https://flock.jfrog.io/artifactory/sbt-bazel;build.timestamp=" + new java.util.Date().getTime),
+    publishTo := Some("Artifactory Realm" at "https://flock.jfrog.io/artifactory/flock-maven"),
     credentials += (if (sys.env.get("CI").isDefined) {
       Credentials(
         "Artifactory Realm",
