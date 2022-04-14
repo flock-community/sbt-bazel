@@ -76,7 +76,7 @@ object Projects {
           )
           .withTestFramework("zio.test.sbt.ZTestFramework")
       ),
-      sbtPlugins = List("""addSbtPlugin("community.flock" % "sbt-bazel" % "0.1.0-SNAPSHOT")""")
+      sbtPlugins = List("""addSbtPlugin("community.flock" % "sbt-bazel" % "0.1.1-SNAPSHOT")""")
     )
 
     def write: Unit = build.writeFiles(Path.of("/tmp/zio-test"))
