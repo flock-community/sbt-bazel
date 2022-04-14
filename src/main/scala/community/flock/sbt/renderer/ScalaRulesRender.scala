@@ -8,18 +8,18 @@ import sbt.*
 final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
 
   def toBuild(module: BuildModule): Starlark = {
-    def buildArgs(name: String, dirType: String, plugins: List[Starlark], deps: List[Starlark]) =
+    def buildArgs(name: String, dirType: String, plugins: List[Starlark], deps: Set[Starlark]) =
       Map(
         "name" -> Starlark.string(name),
         "plugins" -> Starlark.list(plugins),
-        "deps" -> Starlark.list(deps),
+        "deps" -> Starlark.list(deps.toList),
         "visibility" -> Starlark.list(List(Starlark.string("//visibility:public"))),
         "srcs" -> Starlark.function("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/scala/**/*.scala"))))),
         "resources" -> Starlark.function("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/resources/**/*.*")))))
       )
 
     def runtimeTarget = {
-      val runtime = module.dependencies.filter(_.buildDef).map(x => Starlark.string(artifactRef.render(x)))
+      val runtime = module.dependencies.filter(_.buildDef).map(x => Starlark.string(artifactRef.render(x))).toSet
       val plugins = module.dependencies.filter(_.isPlugin).map(x => Starlark.string(artifactRef.render(x)))
       //TODO: the reference to internal dependency is now hardcoded to `//modules/$name`, make dynamic to the actual directory of the module
       val internal = module.dependsOn.map(x => Starlark.string(s"//modules/$x"))
@@ -32,7 +32,7 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
     }
 
     def baseTestTarget(filter: BuildDependency => Boolean, testType: String) = {
-      val test = module.dependencies.filter(filter).map(x => Starlark.string(artifactRef.render(x)))
+      val test = module.dependencies.filter(filter).map(x => Starlark.string(artifactRef.render(x))).toSet
 
       if (test.nonEmpty) {
         val plugins = module.dependencies.filter(_.isPlugin).map(x => Starlark.string(artifactRef.render(x)))
