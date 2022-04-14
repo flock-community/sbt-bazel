@@ -2,7 +2,7 @@ package community.flock.sbt
 
 import community.flock.sbt.core.*
 import community.flock.sbt.renderer.{BazelFormatting, JvmExternalRenderer, ScalaRulesRender}
-import community.flock.sbt.starlak.{Starlak, StarlakAst}
+import community.flock.sbt.starlark.{Starlark, StarlarkAst}
 import higherkindness.droste.scheme
 import sbt.*
 import sbt.Keys.*
@@ -43,9 +43,9 @@ object BazelPlugin extends AutoPlugin {
       val dirs = baseDirectory.?.all(aggregateFilter).value.flatten
       val baseDir = baseDirectory.value
       val deps =
-        Starlak.list(dirs.flatMap { module => IO.read(module / "target/bazel/deps").split("\r\n") }.toList.map(Starlak.string))
+        Starlark.list(dirs.flatMap { module => IO.read(module / "target/bazel/deps").split("\r\n") }.toSet.toList.map(Starlark.string))
 
-      val depsStr = scheme.cata(StarlakAst.render).apply(deps)
+      val depsStr = scheme.cata(StarlarkAst.render).apply(deps)
 
       val depsFile = s"""DEPS = $depsStr"""
 
@@ -56,6 +56,7 @@ object BazelPlugin extends AutoPlugin {
       val scalaVersionValue = scalaVersion.value
       val dependencies = libraryDependencies.value.map(moduleId => toDependency(moduleId, scalaVersionValue, scalaBinaryVersionValue)).toList
       val basePath = Keys.rootPaths.value.get("BASE")
+
       val module = BuildModule(
         name = Keys.name.value.toLowerCase(),
         directory = basePath.map(p => p.relativize(baseDirectory.value.toPath).toString).filter(_.nonEmpty),

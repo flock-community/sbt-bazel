@@ -1,7 +1,7 @@
 package community.flock.sbt.renderer
 
 import community.flock.sbt.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule}
-import community.flock.sbt.starlak.Starlak
+import community.flock.sbt.starlark.Starlark
 
 class ScalaRulesRenderSpec  extends munit.FunSuite {
 
@@ -11,12 +11,12 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
 
   def baseArgs(name: String, deps: List[String], plugins: List[String], dir: String) =
     Map(
-      "name" -> Starlak.string(name),
-      "srcs" -> Starlak.function("glob", Map("include" -> Starlak.list(List(Starlak.string(s"src/$dir/scala/**/*.scala"))))),
-      "resources" -> Starlak.function("glob", Map("include" -> Starlak.list(List(Starlak.string(s"src/$dir/resources/**/*.*"))))),
-      "deps" -> Starlak.list(deps.map(Starlak.string)),
-      "visibility" -> Starlak.list(List(Starlak.string("//visibility:public"))),
-      "plugins" -> Starlak.list(plugins.map(Starlak.string))
+      "name" -> Starlark.string(name),
+      "srcs" -> Starlark.function("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dir/scala/**/*.scala"))))),
+      "resources" -> Starlark.function("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dir/resources/**/*.*"))))),
+      "deps" -> Starlark.list(deps.map(Starlark.string)),
+      "visibility" -> Starlark.list(List(Starlark.string("//visibility:public"))),
+      "plugins" -> Starlark.list(plugins.map(Starlark.string))
     )
 
   private val moduleName = "mod_a"
@@ -31,7 +31,7 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
       )
     )
 
-    val expected = Starlak.build(List(Starlak.function("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main"))))
+    val expected = Starlark.build(List(Starlark.function("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main"))))
 
     assertEquals(output, expected)
   }
@@ -48,7 +48,7 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
       )
     )
 
-    val expected = Starlak.build(List(Starlak.function("scala_image", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main") ++ Map("main_class" -> Starlak.string("run.Main")))))
+    val expected = Starlark.build(List(Starlark.function("scala_image", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main") ++ Map("main_class" -> Starlark.string("run.Main")))))
 
     assertEquals(output, expected)
   }
@@ -64,10 +64,10 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
       )
     )
 
-    val expected = Starlak.build(
+    val expected = Starlark.build(
       List(
-        Starlak.function("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main")),
-        Starlak.function("scala_library", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", moduleName), Nil, "test"))
+        Starlark.function("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main")),
+        Starlark.function("scala_library", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", moduleName), Nil, "test"))
       )
     )
 
