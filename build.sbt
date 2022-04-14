@@ -1,6 +1,8 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val root = (project in file("."))
+  .settings(Defaults.itSettings)
+  .configs(IntegrationTest)
   .settings(
     name := "sbt-bazel",
     organization := "community.flock",
@@ -15,9 +17,14 @@ lazy val root = (project in file("."))
         sys.env("JFROG_TOKEN")
       )
     } else {
-      Credentials(
-        Path.userHome / ".sbt" / ".credentials"
-      )
+        Credentials(
+            Path.userHome / ".sbt" / ".credentials"
+        )
     }),
-    libraryDependencies ++= Seq("io.kevinlee" %% "just-semver" % "0.3.0")
+    addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
+    libraryDependencies ++= Seq(
+        "org.typelevel" %% "cats-core" % "2.7.0",
+        "io.higherkindness" %% "droste-core" % "0.8.0",
+        "org.scalameta" %% "munit" % "0.7.29" % "it,test"
+    )
   )
