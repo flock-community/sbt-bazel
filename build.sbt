@@ -2,7 +2,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "sbt-bazel-install",
+    name := "sbt-bazel",
     organization := "community.flock",
     sbtPlugin := true,
     publishMavenStyle := true,
