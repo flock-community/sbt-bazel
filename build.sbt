@@ -6,7 +6,7 @@ lazy val root = (project in file("."))
     organization := "community.flock",
     sbtPlugin := true,
     publishMavenStyle := true,
-    publishTo := Some("Artifactory Realm" at "https://flock.jfrog.io/artifactory/sbt-bazel;build.timestamp=" + new java.util.Date().getTime),
+    publishTo := Some("Artifactory Realm" at "https://flock.jfrog.io/artifactory/flock-sbt"),
     credentials += (if (sys.env.get("CI").isDefined) {
       Credentials(
         "Artifactory Realm",
