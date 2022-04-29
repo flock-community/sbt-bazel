@@ -1,4 +1,4 @@
-package community.flock.sbt.core
+package community.flock.sbt.bazel.core
 
 final case class BuildDependency(
   groupId: String,

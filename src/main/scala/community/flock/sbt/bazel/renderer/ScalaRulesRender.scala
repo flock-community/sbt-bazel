@@ -1,7 +1,7 @@
-package community.flock.sbt.renderer
+package community.flock.sbt.bazel.renderer
 
-import community.flock.sbt.core.{BuildDependency, BuildModule}
-import community.flock.sbt.starlark.{Starlark, StarlarkAst}
+import community.flock.sbt.bazel.core.{BuildDependency, BuildModule}
+import community.flock.sbt.bazel.starlark.{Starlark, StarlarkAst}
 import higherkindness.droste.scheme
 import sbt.*
 

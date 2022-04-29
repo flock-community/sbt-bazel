@@ -1,4 +1,4 @@
-package community.flock.sbt.renderer
+package community.flock.sbt.bazel.renderer
 
 import community.flock.sbt.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule}
 import community.flock.sbt.starlark.Starlark

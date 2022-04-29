@@ -1,4 +1,4 @@
-package community.flock.sbt.core
+package community.flock.sbt.bazel.core
 
 sealed trait BuildDependencyConfiguration
 

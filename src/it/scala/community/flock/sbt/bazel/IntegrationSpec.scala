@@ -1,4 +1,4 @@
-package community.flock.sbt
+package community.flock.sbt.bazel
 
 import java.io.File
 import scala.sys.process.*
@@ -10,7 +10,7 @@ class IntegrationSpec extends munit.FunSuite {
 
   test("should install sbt project") {
     Projects.zio.write
-    assertEquals(run("sbt bazelSetup bazelModules bazelDeps"), 0)
+    assertEquals(run("sbt bazelInstall"), 0)
     assertEquals(run("bazelisk build //modules/api"), 0)
   }
 
