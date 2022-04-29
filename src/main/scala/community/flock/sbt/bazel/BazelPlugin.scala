@@ -65,6 +65,7 @@ object BazelPlugin extends AutoPlugin {
       IO.write(projectDir / "tools/build_rules/prelude_bazel", getClass.getResourceAsStream("/prelude.bzl").readAllBytes())
       IO.write(projectDir / "tools/build_rules/BUILD", Array.emptyByteArray)
       IO.write(projectDir / "tools/BUILD", Array.emptyByteArray)
+      IO.write(projectDir / "BUILD", Array.emptyByteArray)
       IO.write(projectDir / ".bazelversion", "4.2.2".getBytes())
       IO.write(projectDir / "toolchains/BUILD", getClass.getResourceAsStream("/toolchain.bzl").readAllBytes())
       IO.write(projectDir / "WORKSPACE", getClass.getResourceAsStream("/workspace.bzl").readAllBytes())
