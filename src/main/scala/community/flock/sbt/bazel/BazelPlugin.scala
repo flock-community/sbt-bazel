@@ -1,6 +1,6 @@
 package community.flock.sbt.bazel
 
-import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule, Dependency, DependencyGraphNode}
+import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule}
 import community.flock.sbt.bazel.renderer.{BazelFormatting, JvmExternalRenderer, ScalaRulesRender}
 import community.flock.sbt.bazel.starlark.{Starlark, StarlarkAst}
 import higherkindness.droste.scheme

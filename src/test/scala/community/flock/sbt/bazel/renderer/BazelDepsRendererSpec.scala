@@ -1,6 +1,7 @@
 package community.flock.sbt.bazel.renderer
 
-import community.flock.sbt.core.{BuildArtifactId, BuildDependency}
+import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency}
+
 
 class BazelDepsRendererSpec  extends munit.FunSuite {
 
