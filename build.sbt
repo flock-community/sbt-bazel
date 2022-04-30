@@ -25,8 +25,6 @@ lazy val root = (project in file("."))
     }),
     addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
     libraryDependencies ++= Seq(
-        "org.typelevel" %% "cats-core" % "2.7.0",
-        "io.higherkindness" %% "droste-core" % "0.8.0",
         "org.scalameta" %% "munit" % "0.7.29" % "it,test"
     )
   )

@@ -1,11 +1,20 @@
 package community.flock.sbt.bazel.starlark
 
-import higherkindness.droste.data.Fix
 
 object Starlark {
-  def string(value: String): Starlark = Fix[StarlarkAst](StarlarkAst.Primitive(StarlarkPrimitive.Str(value)))
-  def bool(value: Boolean): Starlark = Fix[StarlarkAst](StarlarkAst.Primitive(StarlarkPrimitive.Bool(value)))
-  def list(values: List[Fix[StarlarkAst]]): Starlark = Fix[StarlarkAst](StarlarkAst.Primitive(StarlarkPrimitive.Collection(values)))
-  def function(name: String, args: Map[String, Fix[StarlarkAst]]): Starlark = Fix[StarlarkAst](StarlarkAst.Function(name, args))
-  def build(calls: List[Fix[StarlarkAst]]): Starlark = Fix[StarlarkAst](StarlarkAst.Build(calls))
+  def string(value: String) =
+    StarlarkPrimitive.Str(value)
+
+  def bool(value: Boolean)=
+    StarlarkPrimitive.Bool(value)
+
+  def list(values: List[StarlarkPrimitive]) =
+    StarlarkPrimitive.Collection(values)
+
+  def functionNamed(name: String, args: Map[String, StarlarkExpr]) =
+    StarlarkExpr.Function(name, args.map { case (key, value) => Argument.Named(key, value) }.toList)
+
+  def function(name: String, args: Argument*): StarlarkExpr.Function =
+    StarlarkExpr.Function(name, args.toList)
+
 }
