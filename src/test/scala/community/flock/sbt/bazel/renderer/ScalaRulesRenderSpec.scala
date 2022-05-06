@@ -80,7 +80,7 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
     val expected = StarlarkProgram(
       List(
         Starlark.functionNamed("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//mod_b:mod_b"), Nil, "main")).stmt,
-        Starlark.functionNamed("scala_library", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", moduleName), Nil, "test")).stmt
+        Starlark.functionNamed("scala_library", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", s":$moduleName"), Nil, "test")).stmt
       )
     )
 
