@@ -1,4 +1,4 @@
-package community.flock.sbt.starlark
+package community.flock.sbt.bazel.starlark
 
 import cats._
 import cats.implicits._

@@ -1,4 +1,4 @@
-package community.flock.sbt.starlark
+package community.flock.sbt.bazel.starlark
 
 import higherkindness.droste.scheme
 

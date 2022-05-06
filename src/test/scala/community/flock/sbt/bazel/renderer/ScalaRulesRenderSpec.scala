@@ -1,7 +1,10 @@
-package community.flock.sbt.renderer
+package community.flock.sbt.bazel.renderer
 
-import community.flock.sbt.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule}
-import community.flock.sbt.starlark.Starlark
+import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule}
+import community.flock.sbt.bazel.starlark.Starlark
+
+import java.nio.file.Path
+
 
 class ScalaRulesRenderSpec  extends munit.FunSuite {
 
@@ -25,13 +28,13 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
     val output = render.toBuild(
       BuildModule(
         name = moduleName,
-        directory = Some(moduleName),
+        directory = Path.of(moduleName),
         dependencies = List(fs2, itext),
         dependsOn = Set("mod_b")
       )
     )
 
-    val expected = Starlark.build(List(Starlark.function("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main"))))
+    val expected = Starlark.build(List(Starlark.function("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//mod_b"), Nil, "main"))))
 
     assertEquals(output, expected)
   }
@@ -41,14 +44,14 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
     val output = render.toBuild(
       BuildModule(
         name = moduleName,
-        directory = Some(moduleName),
+        directory = Path.of(moduleName),
         dependencies = List(fs2, itext),
         dependsOn = Set("mod_b"),
         mainClass = Some("run.Main")
       )
     )
 
-    val expected = Starlark.build(List(Starlark.function("scala_image", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main") ++ Map("main_class" -> Starlark.string("run.Main")))))
+    val expected = Starlark.build(List(Starlark.function("scala_image", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//mod_b"), Nil, "main") ++ Map("main_class" -> Starlark.string("run.Main")))))
 
     assertEquals(output, expected)
   }
@@ -58,7 +61,7 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
     val output = render.toBuild(
       BuildModule(
         name = moduleName,
-        directory = Some(moduleName),
+        directory = Path.of(moduleName),
         dependencies = List(fs2, itext, munit),
         dependsOn = Set("mod_b")
       )
@@ -66,7 +69,7 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
 
     val expected = Starlark.build(
       List(
-        Starlark.function("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//modules/mod_b"), Nil, "main")),
+        Starlark.function("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//mod_b"), Nil, "main")),
         Starlark.function("scala_library", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", moduleName), Nil, "test"))
       )
     )

@@ -1,4 +1,6 @@
-package community.flock.sbt
+package community.flock.sbt.bazel
+
+import buildinfo.BuildInfo
 
 object Projects {
 
@@ -76,7 +78,7 @@ object Projects {
           )
           .withTestFramework("zio.test.sbt.ZTestFramework")
       ),
-      sbtPlugins = List("""addSbtPlugin("community.flock" % "sbt-bazel" % "0.1.0-SNAPSHOT")""")
+      sbtPlugins = List(s"""addSbtPlugin("community.flock" % "sbt-bazel" % "${BuildInfo.version}")""")
     )
 
     def write: Unit = build.writeFiles(Path.of("/tmp/zio-test"))

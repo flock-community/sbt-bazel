@@ -1,6 +1,6 @@
-package community.flock.sbt.renderer
+package community.flock.sbt.bazel.renderer
 
-import community.flock.sbt.core.{BuildArtifactId, BuildDependency}
+import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency}
 
 object BazelFormatting {
   def formatString(str: String): String =

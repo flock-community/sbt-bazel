@@ -42,9 +42,9 @@ register_toolchains("//toolchains:scala_toolchain")
 
 http_archive(
     name = "io_bazel_rules_docker",
-    sha256 = "92779d3445e7bdc79b961030b996cb0c91820ade7ffa7edca69273f404b085d5",
-    strip_prefix = "rules_docker-0.20.0",
-    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.20.0/rules_docker-v0.20.0.tar.gz"],
+    sha256 = "27d53c1d646fc9537a70427ad7b034734d08a9c38924cc6357cc973fed300820",
+    strip_prefix = "rules_docker-0.24.0",
+    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.24.0/rules_docker-v0.24.0.tar.gz"],
 )
 
 load("@io_bazel_rules_docker//toolchains/docker:toolchain.bzl",

@@ -1,6 +1,6 @@
-package community.flock.sbt.renderer
+package community.flock.sbt.bazel.renderer
 
-import community.flock.sbt.core.BuildDependency
+import community.flock.sbt.bazel.core.BuildDependency
 
 object JvmExternalRenderer extends ArtifactReferenceRenderer {
   override def render(artifact: BuildDependency): String =

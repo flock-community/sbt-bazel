@@ -1,7 +1,7 @@
-package community.flock.sbt.renderer
+package community.flock.sbt.bazel.renderer
 
-import community.flock.sbt.core.{BuildDependency, BuildModule}
-import community.flock.sbt.starlark.{Starlark, StarlarkAst}
+import community.flock.sbt.bazel.core.{BuildDependency, BuildModule}
+import community.flock.sbt.bazel.starlark.{Starlark, StarlarkAst}
 import higherkindness.droste.scheme
 import sbt.*
 
@@ -21,8 +21,7 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
     def runtimeTarget = {
       val runtime = module.dependencies.filter(_.buildDef).map(x => Starlark.string(artifactRef.render(x)))
       val plugins = module.dependencies.filter(_.isPlugin).map(x => Starlark.string(artifactRef.render(x)))
-      //TODO: the reference to internal dependency is now hardcoded to `//modules/$name`, make dynamic to the actual directory of the module
-      val internal = module.dependsOn.map(x => Starlark.string(s"//modules/$x"))
+      val internal = module.dependsOn.map(x => Starlark.string(s"//$x"))
       val baseArgs = buildArgs(module.name, "main", plugins, runtime ++ internal)
 
       module.mainClass match {

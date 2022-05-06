@@ -1,15 +1,17 @@
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "0.1.1-SNAPSHOT"
 
 lazy val root = (project in file("."))
   .settings(Defaults.itSettings)
   .configs(IntegrationTest)
+  .enablePlugins(BuildInfoPlugin)
   .settings(
+    buildInfoKeys := Seq(version),
     name := "sbt-bazel",
     organization := "community.flock",
     sbtPlugin := true,
     publishMavenStyle := true,
     publishTo := Some("Artifactory Realm" at "https://flock.jfrog.io/artifactory/flock-sbt"),
-    credentials += (if (sys.env.get("CI").isDefined) {
+    credentials += (if (sys.env.contains("CI")) {
       Credentials(
         "Artifactory Realm",
         "flock.jfrog.io",

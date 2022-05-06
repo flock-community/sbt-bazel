@@ -1,4 +1,4 @@
-package community.flock.sbt
+package community.flock.sbt.bazel
 
 import java.nio.file.{Files, Path, StandardOpenOption}
 
