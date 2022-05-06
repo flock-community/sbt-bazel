@@ -20,7 +20,7 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
     def runtimeTarget = {
       val runtime = module.dependencies.filter(_.buildDef).map(x => Starlark.string(artifactRef.render(x)))
       val plugins = module.dependencies.filter(_.isPlugin).map(x => Starlark.string(artifactRef.render(x)))
-      val internal = module.dependsOn.map(x => Starlark.string(s"//$x"))
+      val internal = module.dependsOn.map(x => Starlark.string(s"//${x.directory}:${x.name}"))
       val baseArgs = buildArgs(module.name, "main", plugins, runtime ++ internal)
 
       module.mainClass match {

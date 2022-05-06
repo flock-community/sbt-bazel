@@ -1,6 +1,6 @@
 package community.flock.sbt.bazel
 
-import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule, BuildResolver}
+import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule, BuildProjectDependency, BuildResolver}
 import community.flock.sbt.bazel.renderer.*
 import community.flock.sbt.bazel.starlark.StarlarkProgram
 import sbt.*
@@ -68,7 +68,7 @@ object BazelPlugin extends AutoPlugin {
 
 
     val modules = moduleMap.map { case (name, mod) =>
-      mod.withDependsOn(internalDeps.getOrElse(name, Set.empty).flatMap(key => moduleMap.get(key).map(_.directory.toString)))
+      mod.withDependsOn(internalDeps.getOrElse(name, Set.empty).flatMap(key => moduleMap.get(key).map(x => BuildProjectDependency(key, x.directory.toString))))
     }
 
     def writeSetup(): Unit = {
@@ -106,11 +106,16 @@ object BazelPlugin extends AutoPlugin {
     def decodeConfigurations(configurations: Option[String]): List[BuildDependencyConfiguration] =
       configurations match {
         case Some(cfg) =>
-          cfg.toLowerCase.split(',').toList.collect {
-            case "it" => BuildDependencyConfiguration.IntegrationTest
-            case "test" => BuildDependencyConfiguration.Test
-            case "plugin" => BuildDependencyConfiguration.Plugin
+          val mapping = Map(
+            "it" -> BuildDependencyConfiguration.IntegrationTest,
+            "test" -> BuildDependencyConfiguration.Test,
+            "plugin" -> BuildDependencyConfiguration.Plugin
+          )
+
+          mapping.foldLeft(List.empty[BuildDependencyConfiguration]) { case (acc, (key, value)) =>
+            if(cfg.contains(key)) acc :+ value else acc
           }
+
         case None => Nil
       }
 
