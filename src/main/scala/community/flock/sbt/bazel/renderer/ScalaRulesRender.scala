@@ -7,20 +7,20 @@ import sbt.*
 final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
 
   def toBuild(module: BuildModule) = {
-    def buildArgs(name: String, dirType: String, plugins: List[StarlarkPrimitive], deps: List[StarlarkPrimitive]): Map[String, StarlarkExpr] =
+    def buildArgs(name: String, dirType: String, plugins: Set[String], deps: Set[String]): Map[String, StarlarkExpr] =
       Map(
         "name" -> Starlark.string(name).expr,
-        "plugins" -> Starlark.list(plugins).expr,
-        "deps" -> Starlark.list(deps).expr,
+        "plugins" -> Starlark.list(plugins.toList.map(Starlark.string)).expr,
+        "deps" -> Starlark.list(deps.toList.map(Starlark.string)).expr,
         "visibility" -> Starlark.list(List(Starlark.string("//visibility:public"))).expr,
         "srcs" -> Starlark.functionNamed("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/scala/**/*.scala"))).expr)),
         "resources" -> Starlark.functionNamed("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/resources/**/*.*"))).expr))
       )
 
     def runtimeTarget = {
-      val runtime = module.dependencies.filter(_.buildDef).map(x => Starlark.string(artifactRef.render(x)))
-      val plugins = module.dependencies.filter(_.isPlugin).map(x => Starlark.string(artifactRef.render(x)))
-      val internal = module.dependsOn.map(x => Starlark.string(s"//${x.directory}:${x.name}"))
+      val runtime = module.dependencies.filter(_.buildDef).toSet.map(artifactRef.render)
+      val plugins = module.dependencies.filter(_.isPlugin).toSet.map(artifactRef.render)
+      val internal = module.dependsOn.map(x => s"//${x.directory}:${x.name}")
       val baseArgs = buildArgs(module.name, "main", plugins, runtime ++ internal)
 
       module.mainClass match {
@@ -30,11 +30,11 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
     }
 
     def baseTestTarget(filter: BuildDependency => Boolean, testType: String) = {
-      val test = module.dependencies.filter(filter).map(x => Starlark.string(artifactRef.render(x)))
+      val test = module.dependencies.filter(filter).toSet.map(artifactRef.render)
 
       if (test.nonEmpty) {
-        val plugins = module.dependencies.filter(_.isPlugin).map(x => Starlark.string(artifactRef.render(x)))
-        val internal = Set(Starlark.string(module.name))
+        val plugins = module.dependencies.filter(_.isPlugin).toSet.map(artifactRef.render)
+        val internal = Set(s":${module.name}")
         val baseArgs = buildArgs(s"${module.name}_$testType", testType, plugins, test ++ internal)
 
         Option(Starlark.functionNamed("scala_library", baseArgs).stmt)
