@@ -1,21 +1,20 @@
 package community.flock.sbt.bazel.renderer
 
 import community.flock.sbt.bazel.core.{BuildDependency, BuildModule}
-import community.flock.sbt.bazel.starlark.{Starlark, StarlarkAst}
-import higherkindness.droste.scheme
+import community.flock.sbt.bazel.starlark.{Starlark, StarlarkExpr, StarlarkPrimitive, StarlarkProgram}
 import sbt.*
 
 final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
 
-  def toBuild(module: BuildModule): Starlark = {
-    def buildArgs(name: String, dirType: String, plugins: List[Starlark], deps: List[Starlark]) =
+  def toBuild(module: BuildModule) = {
+    def buildArgs(name: String, dirType: String, plugins: List[StarlarkPrimitive], deps: List[StarlarkPrimitive]): Map[String, StarlarkExpr] =
       Map(
-        "name" -> Starlark.string(name),
-        "plugins" -> Starlark.list(plugins),
-        "deps" -> Starlark.list(deps),
-        "visibility" -> Starlark.list(List(Starlark.string("//visibility:public"))),
-        "srcs" -> Starlark.function("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/scala/**/*.scala"))))),
-        "resources" -> Starlark.function("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/resources/**/*.*")))))
+        "name" -> Starlark.string(name).expr,
+        "plugins" -> Starlark.list(plugins).expr,
+        "deps" -> Starlark.list(deps).expr,
+        "visibility" -> Starlark.list(List(Starlark.string("//visibility:public"))).expr,
+        "srcs" -> Starlark.functionNamed("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/scala/**/*.scala"))).expr)),
+        "resources" -> Starlark.functionNamed("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/resources/**/*.*"))).expr))
       )
 
     def runtimeTarget = {
@@ -25,8 +24,8 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
       val baseArgs = buildArgs(module.name, "main", plugins, runtime ++ internal)
 
       module.mainClass match {
-        case Some(clz) => Starlark.function("scala_image", baseArgs ++ Map("main_class" -> Starlark.string(clz)))
-        case None => Starlark.function("scala_library", baseArgs)
+        case Some(clz) => Starlark.functionNamed("scala_image", baseArgs ++ Map("main_class" -> Starlark.string(clz).expr)).stmt
+        case None => Starlark.functionNamed("scala_library", baseArgs).stmt
       }
     }
 
@@ -38,7 +37,7 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
         val internal = Set(Starlark.string(module.name))
         val baseArgs = buildArgs(s"${module.name}_$testType", testType, plugins, test ++ internal)
 
-        Option(Starlark.function("scala_library", baseArgs))
+        Option(Starlark.functionNamed("scala_library", baseArgs).stmt)
       } else {
         Option.empty
       }
@@ -48,15 +47,13 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
 
     def testTarget = baseTestTarget(_.isIntegrationTest, "it")
 
-    //TODO: uncomment to work on test targets
-    //Starlak.build(List(runtimeTarget) ++ testTarget.toList ++ itTarget.toList)
-    Starlark.build(List(runtimeTarget) ++ testTarget.toList ++ itTarget.toList)
+    StarlarkProgram(List(runtimeTarget) ++ testTarget.toList ++ itTarget.toList)
   }
 
   def render(directory: File, module: BuildModule): BazelArtifact = {
 
     val build = toBuild(module)
-    val contents = scheme.cata(StarlarkAst.render).apply(build)
+    val contents = StarlarkProgram.show(build)
 
     BazelArtifact(directory / "BUILD", contents)
   }

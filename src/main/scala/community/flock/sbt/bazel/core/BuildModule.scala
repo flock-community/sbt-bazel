@@ -8,7 +8,8 @@ final case class BuildModule(
   dependencies: List[BuildDependency] = List.empty,
   mainClass: Option[String] = None,
   testFrameworks: List[String] = Nil,
-  dependsOn: Set[String] = Set.empty
+  dependsOn: Set[String] = Set.empty,
+  resolvers: List[BuildResolver] = Nil
 ) {
   def withDependsOn(on: Set[String]) = copy(dependsOn = on)
 }
