@@ -4,7 +4,7 @@ import community.flock.sbt.bazel.starlark.{Argument, Starlark, StarlarkProgram, 
 
 object ScalaToolchainRenderer {
 
-  def render(scalacOptions: Set[String]): StarlarkProgram =
+  def render(scalacOptions: Seq[String]): StarlarkProgram =
     StarlarkProgram.of(
       StarlarkStmt.Load("@io_bazel_rules_scala//scala:scala_toolchain.bzl", List(Argument.Literal("scala_toolchain"))),
       StarlarkStmt.Load("@io_bazel_rules_scala//scala:providers.bzl", List(Argument.Literal("declare_deps_provider"))),

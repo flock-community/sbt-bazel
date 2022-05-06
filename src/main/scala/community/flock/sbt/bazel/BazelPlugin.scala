@@ -16,7 +16,7 @@ object BazelPlugin extends AutoPlugin {
       settingKey[String]("Bazel version to use")
 
     val bazelScalacOptions =
-      settingKey[Set[String]]("Bazel scala compiler options")
+      taskKey[Seq[String]]("Bazel scala compiler options")
   }
 
   import autoImport.*
@@ -34,7 +34,7 @@ object BazelPlugin extends AutoPlugin {
     val projectsMap = currentBuildUnit.defined
     val projectDir = (extracted.currentRef / Keys.baseDirectory).get(data).getOrElse(sys.error("Impossible"))
     val rootDir = buildRoot.get(data) getOrElse projectDir
-    val scalacOptions = bazelScalacOptions.get(data) getOrElse Set.empty
+    val scalacOptions = Project.runTask(extracted.currentRef / bazelScalacOptions, s).flatMap { case (_, res) => res.toEither.toOption } getOrElse Seq.empty
     val bzlVersion = bazelVersion.get(data) getOrElse "4.2.2"
     val internalDeps = projectsMap.values.toList.map(p => (p.id, p.dependencies.flatMap(dep => projectsMap.get(dep.project.project)).map(_.id).toSet)).toMap
 
