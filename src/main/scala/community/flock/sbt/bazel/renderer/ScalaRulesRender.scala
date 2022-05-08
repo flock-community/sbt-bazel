@@ -13,6 +13,7 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
         "plugins" -> Starlark.list(plugins.toList.map(Starlark.string)).expr,
         "deps" -> Starlark.list(deps.toList.map(Starlark.string)).expr,
         "visibility" -> Starlark.list(List(Starlark.string("//visibility:public"))).expr,
+        "scalacopts" -> Starlark.list(module.scalacOptions.map(Starlark.string).toList).expr,
         "srcs" -> Starlark.functionNamed("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/scala/**/*.scala"))).expr)),
         "resources" -> Starlark.functionNamed("glob", Map("include" -> Starlark.list(List(Starlark.string(s"src/$dirType/resources/**/*.*"))).expr))
       )

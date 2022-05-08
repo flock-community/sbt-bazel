@@ -11,7 +11,8 @@ final case class BuildModule(
   mainClass: Option[String] = None,
   testFrameworks: List[String] = Nil,
   dependsOn: Set[BuildProjectDependency] = Set.empty,
-  resolvers: List[BuildResolver] = Nil
+  resolvers: List[BuildResolver] = Nil,
+  scalacOptions: Seq[String] = List.empty
 ) {
   def withDependsOn(on: Set[BuildProjectDependency]): BuildModule = copy(dependsOn = on)
 }

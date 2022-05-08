@@ -6,7 +6,7 @@ final case class BuildDependency(
   version: String,
   sbtVersion: Option[String] = None,
   scalaVersion: Option[String] = None,
-  configurations: List[BuildDependencyConfiguration] = Nil
+  configurations: Set[BuildDependencyConfiguration] = Set.empty
 ) {
   def isTest: Boolean =
     configurations.contains(BuildDependencyConfiguration.Test)

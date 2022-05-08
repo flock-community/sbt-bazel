@@ -14,9 +14,6 @@ object BazelPlugin extends AutoPlugin {
 
     val bazelVersion =
       settingKey[String]("Bazel version to use")
-
-    val bazelScalacOptions =
-      taskKey[Seq[String]]("Bazel scala compiler options")
   }
 
   import autoImport.*
@@ -34,7 +31,6 @@ object BazelPlugin extends AutoPlugin {
     val projectsMap = currentBuildUnit.defined
     val projectDir = (extracted.currentRef / Keys.baseDirectory).get(data).getOrElse(sys.error("Impossible"))
     val rootDir = buildRoot.get(data) getOrElse projectDir
-    val scalacOptions = Project.runTask(extracted.currentRef / bazelScalacOptions, s).flatMap { case (_, res) => res.toEither.toOption } getOrElse Seq.empty
     val bzlVersion = bazelVersion.get(data) getOrElse "4.2.2"
     val internalDeps = projectsMap.values.toList.map(p => (p.id, p.dependencies.flatMap(dep => projectsMap.get(dep.project.project)).map(_.id).toSet)).toMap
 
@@ -47,6 +43,7 @@ object BazelPlugin extends AutoPlugin {
         scalaBinaryVersion <- (p / Keys.scalaBinaryVersion).get(data)
         mainClass = Project.runTask((p / Keys.mainClass), s).flatMap { case (_, res) => res.toEither.toOption }
         resolvers = Project.runTask((p / Keys.fullResolvers), s).flatMap { case (_, res) => res.toEither.toOption }
+        scalacOpts = Project.runTask((p / Keys.scalacOptions), s).flatMap { case (_, res) => res.toEither.toOption }
       } yield {
         val foundResolvers = resolvers.toList.flatten.collect {
           case repo: MavenRepository if !repo.root.startsWith("file:") =>
@@ -61,7 +58,8 @@ object BazelPlugin extends AutoPlugin {
           directory = moduleDir,
           dependencies = deps.map(d => toDependency(d, scalaFullVersion, scalaBinaryVersion)).toList,
           mainClass = mainClass.flatten,
-          resolvers = foundResolvers
+          resolvers = foundResolvers,
+          scalacOptions = scalacOpts.getOrElse(Seq.empty)
         )
       }
     }.filter(!_.name.contains("root")).map(x => x.name -> x).toMap
@@ -76,7 +74,7 @@ object BazelPlugin extends AutoPlugin {
       val resolvers = modules.flatMap(_.resolvers).map(_.show).toSet
 
       IO.write(projectDir / "WORKSPACE", StarlarkProgram.show(WorkspaceRenderer.render(dependencies, resolvers)))
-      IO.write(projectDir / "toolchains/BUILD", StarlarkProgram.show(ScalaToolchainRenderer.render(scalacOptions)))
+      IO.write(projectDir / "toolchains/BUILD", StarlarkProgram.show(ScalaToolchainRenderer.render))
     }
 
     def writeModules(): Unit = modules.foreach { mod =>
@@ -103,20 +101,21 @@ object BazelPlugin extends AutoPlugin {
     CrossVersion(moduleId.crossVersion, scalaFullVersion, scalaBinaryVersion).map(_ (moduleId.name))
 
   private def toDependency(moduleId: ModuleID, scalaFullVersion: String, scalaBinaryVersion: String): BuildDependency = {
-    def decodeConfigurations(configurations: Option[String]): List[BuildDependencyConfiguration] =
+    def decodeConfigurations(configurations: Option[String]): Set[BuildDependencyConfiguration] =
       configurations match {
         case Some(cfg) =>
           val mapping = Map(
+            "compile" -> BuildDependencyConfiguration.Compile,
             "it" -> BuildDependencyConfiguration.IntegrationTest,
             "test" -> BuildDependencyConfiguration.Test,
             "plugin" -> BuildDependencyConfiguration.Plugin
           )
 
-          mapping.foldLeft(List.empty[BuildDependencyConfiguration]) { case (acc, (key, value)) =>
-            if(cfg.contains(key)) acc :+ value else acc
+          mapping.foldLeft(Set.empty[BuildDependencyConfiguration]) { case (acc, (key, value)) =>
+            if(cfg.contains(key)) acc + value else acc
           }
 
-        case None => Nil
+        case None => Set(BuildDependencyConfiguration.Compile)
       }
 
     BuildDependency(

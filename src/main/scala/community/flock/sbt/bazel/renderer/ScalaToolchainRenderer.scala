@@ -4,7 +4,7 @@ import community.flock.sbt.bazel.starlark.{Argument, Starlark, StarlarkProgram, 
 
 object ScalaToolchainRenderer {
 
-  def render(scalacOptions: Seq[String]): StarlarkProgram =
+  def render: StarlarkProgram =
     StarlarkProgram.of(
       StarlarkStmt.Load("@io_bazel_rules_scala//scala:scala_toolchain.bzl", List(Argument.Literal("scala_toolchain"))),
       StarlarkStmt.Load("@io_bazel_rules_scala//scala:providers.bzl", List(Argument.Literal("declare_deps_provider"))),
@@ -16,7 +16,6 @@ object ScalaToolchainRenderer {
             "unused_dependency_checker_mode" -> Starlark.string("off").expr,
             "dependency_mode" -> Starlark.string("transitive").expr,
             "dependency_tracking_method" -> Starlark.string("ast").expr,
-            "scalacopts" -> Starlark.list(scalacOptions.map(Starlark.string).toList).expr,
             "visibility" -> Starlark.list(List(Starlark.string("//visibility:public"))).expr,
           )
         )
