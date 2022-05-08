@@ -8,8 +8,8 @@ import java.nio.file.Path
 
 class ScalaRulesRenderSpec  extends munit.FunSuite {
 
-  val fs2 = BuildDependency("co.fs2", BuildArtifactId("fs2-core", Some("fs2-core")), "3.2.7", Some("1.6.2"), Some("2.13"))
-  val itext = BuildDependency("itext", BuildArtifactId("itext", None), "1.4.1", Some("1.6.2"), None)
+  val fs2 = BuildDependency("co.fs2", BuildArtifactId("fs2-core", Some("fs2-core")), "3.2.7", Some("1.6.2"), Some("2.13"), Set(BuildDependencyConfiguration.Compile))
+  val itext = BuildDependency("itext", BuildArtifactId("itext", None), "1.4.1", Some("1.6.2"), None, Set(BuildDependencyConfiguration.Compile))
   val munit = BuildDependency("org.scalameta", BuildArtifactId("munit", Some("munit")), "0.7.29", Some("1.6.2"), Some("2.13"), Set(BuildDependencyConfiguration.Test))
 
   def baseArgs(name: String, deps: List[String], plugins: List[String], dir: String) =

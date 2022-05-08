@@ -19,7 +19,7 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
       )
 
     def runtimeTarget = {
-      val runtime = module.dependencies.filter(_.buildDef).toSet.map(artifactRef.render)
+      val runtime = module.dependencies.filter(_.isCompile).toSet.map(artifactRef.render)
       val plugins = module.dependencies.filter(_.isPlugin).toSet.map(artifactRef.render)
       val internal = module.dependsOn.map(x => s"//${x.directory}:${x.name}")
       val baseArgs = buildArgs(module.name, "main", plugins, runtime ++ internal)
