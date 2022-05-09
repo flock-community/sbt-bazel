@@ -19,5 +19,6 @@ project/plugins/project/
 file-uploads
 .bazelversion
 .bazelrc
+prelude_bazel
 WORKSPACE
 BUILD
