@@ -3,7 +3,7 @@ package community.flock.sbt.bazel
 import buildinfo.BuildInfo
 
 import java.io.File
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, OpenOption, Path, Paths, StandardOpenOption}
 import scala.io.Source
 import scala.sys.process.*
 
@@ -16,7 +16,7 @@ class IntegrationSpec extends munit.FunSuite {
   }
 
   def writePluginFile(path: File): Path =
-    Files.write(path.toPath.resolve("project/plugins.sbt"), s"""addSbtPlugin("community.flock" % "sbt-bazel" % "${BuildInfo.version}")""".getBytes())
+    Files.write(path.toPath.resolve("project/plugins.sbt"), s"""addSbtPlugin("community.flock" % "sbt-bazel" % "${BuildInfo.version}")""".getBytes(), StandardOpenOption.CREATE_NEW)
 
   test("should install sbt project") {
     val path = fileFromPath("/simple-zio-project")
