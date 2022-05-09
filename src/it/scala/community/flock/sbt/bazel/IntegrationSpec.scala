@@ -14,7 +14,7 @@ class IntegrationSpec extends munit.FunSuite {
 
   def writePluginFile(path: File): Path = {
     val pluginsPath = path.toPath.resolve("project/plugins.sbt")
-    Files.createDirectories(pluginsPath.resolve("project"))
+    Files.createDirectories(path.toPath.resolve("project"))
     Files.write(pluginsPath, s"""addSbtPlugin("community.flock" % "sbt-bazel" % "${BuildInfo.version}")""".getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
   }
 
