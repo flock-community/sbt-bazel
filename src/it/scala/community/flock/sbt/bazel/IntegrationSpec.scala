@@ -7,12 +7,20 @@ import scala.sys.process.*
 
 class IntegrationSpec extends munit.FunSuite {
 
-  test("should install sbt project") {
+  test("simple zio project") {
     val path = fileFromPath("/simple-zio-project")
     writePluginFile(path)
     writeBazelrc(path)
     assertEquals(run(path, "sbt bazelInstall"), 0)
     assertEquals(run(path, "bazel build //modules/api"), 0)
+  }
+
+  test("play project") {
+    val path = fileFromPath("/play-project")
+    writePluginFile(path, List("""addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.8.15")"""))
+    writeBazelrc(path)
+    assertEquals(run(path, "sbt bazelInstall"), 0)
+    assertEquals(run(path, "bazel build //:play-scala-seed"), 0)
   }
 
   private def fileFromPath(path: String): Path =
@@ -21,10 +29,11 @@ class IntegrationSpec extends munit.FunSuite {
   private def run(path: Path, cmd: String): Int =
     Process(cmd, path.toFile).run().exitValue()
 
-  private def writePluginFile(path: Path): Path = {
+  private def writePluginFile(path: Path, plugins: List[String] = Nil): Path = {
     val pluginsPath = path.resolve("project/plugins.sbt")
+    val lines = List(s"""addSbtPlugin("community.flock" % "sbt-bazel" % "${BuildInfo.version}")""") ++ plugins
     Files.createDirectories(path.resolve("project"))
-    Files.write(pluginsPath, s"""addSbtPlugin("community.flock" % "sbt-bazel" % "${BuildInfo.version}")""".getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
+    Files.write(pluginsPath, lines.mkString("\r\n").getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
   }
 
   private def writeBazelrc(path: Path): Path = {

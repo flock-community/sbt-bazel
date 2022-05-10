@@ -34,6 +34,8 @@ object BazelPlugin extends AutoPlugin {
     val bzlVersion = bazelVersion.get(data) getOrElse "4.2.2"
     val internalDeps = projectsMap.values.toList.map(p => (p.id, p.dependencies.flatMap(dep => projectsMap.get(dep.project.project)).map(_.id).toSet)).toMap
 
+    println(buildStructure.allProjects)
+
     val moduleMap = buildStructure.allProjectRefs.flatMap { p =>
       for {
         name <- (p / Keys.name).get(data)
@@ -53,7 +55,7 @@ object BazelPlugin extends AutoPlugin {
             BuildResolver.Ivy(repo.name, ivyPatterns, None)
         }
 
-        BuildModule(
+        val module = BuildModule(
           name = name,
           directory = moduleDir,
           dependencies = deps.map(d => toDependency(d, scalaFullVersion, scalaBinaryVersion)).toList,
@@ -61,6 +63,10 @@ object BazelPlugin extends AutoPlugin {
           resolvers = foundResolvers,
           scalacOptions = scalacOpts.getOrElse(Seq.empty)
         )
+
+        println(module)
+
+        module
       }
     }.filter(!_.name.contains("root")).map(x => x.name -> x).toMap
 
