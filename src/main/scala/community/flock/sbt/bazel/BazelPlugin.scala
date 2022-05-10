@@ -14,6 +14,9 @@ object BazelPlugin extends AutoPlugin {
 
     val bazelVersion =
       settingKey[String]("Bazel version to use")
+
+    val scalacJvmFlags =
+      settingKey[List[String]]("Scala compiler JVM opts")
   }
 
   import autoImport.*
@@ -32,6 +35,7 @@ object BazelPlugin extends AutoPlugin {
     val projectDir = (extracted.currentRef / Keys.baseDirectory).get(data).getOrElse(sys.error("Impossible"))
     val rootDir = buildRoot.get(data) getOrElse projectDir
     val bzlVersion = bazelVersion.get(data) getOrElse "4.2.2"
+    val scalacJvmOpts = scalacJvmFlags.get(data) getOrElse List.empty
     val internalDeps = projectsMap.values.toList.map(p => (p.id, p.dependencies.flatMap(dep => projectsMap.get(dep.project.project)).map(_.id).toSet)).toMap
 
     val moduleMap = buildStructure.allProjectRefs.flatMap { p =>
@@ -74,7 +78,7 @@ object BazelPlugin extends AutoPlugin {
       val resolvers = modules.flatMap(_.resolvers).map(_.show).toSet
 
       IO.write(projectDir / "WORKSPACE", StarlarkProgram.show(WorkspaceRenderer.render(dependencies, resolvers)))
-      IO.write(projectDir / "toolchains/BUILD", StarlarkProgram.show(ScalaToolchainRenderer.render))
+      IO.write(projectDir / "toolchains/BUILD", StarlarkProgram.show(ScalaToolchainRenderer.render(scalacJvmOpts)))
     }
 
     def writeModules(): Unit = modules.foreach { mod =>
