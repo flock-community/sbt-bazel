@@ -17,3 +17,8 @@ project/plugins/project/
 .idea*
 
 file-uploads
+.bazelversion
+.bazelrc
+prelude_bazel
+WORKSPACE
+BUILD

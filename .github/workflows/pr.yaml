@@ -6,23 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
+      BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
     steps:
-      - uses: actions/checkout@v1
-
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v2
+      - uses: bazelbuild/setup-bazelisk@v2
+      - uses: olafurpg/setup-scala@v13
         with:
-          python-version: '3.10.1'
-
-      - name: Install bazelisk
-        run: |
-          curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.10.1/bazelisk-linux-amd64"
-          mkdir -p "${GITHUB_WORKSPACE}/bin/"
-          mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
-          chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
-
-      - name: Setup Sbt
-        uses: coursier/setup-action@v1.2.0-M2
-        with:
-          apps: sbt sbtn
-
+          java-version: "openjdk@1.17"
       - run: sbt test publishLocal it:test
