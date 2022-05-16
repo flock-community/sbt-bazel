@@ -1,4 +1,4 @@
-ThisBuild / version := "0.1.6-SNAPSHOT"
+ThisBuild / version := "0.1.7-SNAPSHOT"
 
 lazy val root = (project in file("."))
   .settings(Defaults.itSettings)

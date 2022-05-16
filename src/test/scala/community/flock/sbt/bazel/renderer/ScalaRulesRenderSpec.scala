@@ -20,7 +20,8 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
       "deps" -> Starlark.list(deps.map(Starlark.string)).expr,
       "visibility" -> Starlark.list(List(Starlark.string("//visibility:public"))).expr,
       "plugins" -> Starlark.list(plugins.map(Starlark.string)).expr,
-      "scalacopts" -> Starlark.list(List.empty).expr
+      "scalacopts" -> Starlark.list(List.empty).expr,
+      "scalac_jvm_flags" -> Starlark.list(List.empty).expr
     )
 
   private val moduleName = "mod_a"

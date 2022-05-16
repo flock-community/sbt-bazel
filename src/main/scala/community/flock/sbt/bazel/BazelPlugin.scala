@@ -35,7 +35,6 @@ object BazelPlugin extends AutoPlugin {
     val projectDir = (extracted.currentRef / Keys.baseDirectory).get(data).getOrElse(sys.error("Impossible"))
     val rootDir = (ThisBuild / buildRoot).get(data) getOrElse projectDir
     val bzlVersion = (ThisBuild / bazelVersion).get(data) getOrElse "4.2.2"
-    val scalacJvmFlags = (ThisBuild / bazelScalacJvmFlags).get(data) getOrElse List.empty
     val internalDeps = projectsMap.values.toList.map(p => (p.id, p.dependencies.flatMap(dep => projectsMap.get(dep.project.project)).map(_.id).toSet)).toMap
 
     val moduleMap = buildStructure.allProjectRefs.flatMap { p =>
@@ -48,6 +47,7 @@ object BazelPlugin extends AutoPlugin {
         mainClass = Project.runTask((p / Keys.mainClass), s).flatMap { case (_, res) => res.toEither.toOption }
         resolvers = Project.runTask((p / Keys.fullResolvers), s).flatMap { case (_, res) => res.toEither.toOption }
         scalacOpts = Project.runTask((p / Keys.scalacOptions), s).flatMap { case (_, res) => res.toEither.toOption }
+        scalacCompilerOpts = (p / bazelScalacJvmFlags).get(data)
       } yield {
         val foundResolvers = resolvers.toList.flatten.collect {
           case repo: MavenRepository if !repo.root.startsWith("file:") =>
@@ -63,7 +63,8 @@ object BazelPlugin extends AutoPlugin {
           dependencies = deps.map(d => toDependency(d, scalaFullVersion, scalaBinaryVersion)).toList,
           mainClass = mainClass.flatten,
           resolvers = foundResolvers,
-          scalacOptions = scalacOpts.getOrElse(Seq.empty)
+          scalacOptions = scalacOpts.map(_.toList).getOrElse(List.empty),
+          scalacCompilerOptions = scalacCompilerOpts.getOrElse(List.empty)
         )
       }
     }.filter(!_.name.contains("root")).map(x => x.name -> x).toMap
@@ -78,7 +79,7 @@ object BazelPlugin extends AutoPlugin {
       val resolvers = modules.flatMap(_.resolvers).map(_.show).toSet
 
       IO.write(projectDir / "WORKSPACE", StarlarkProgram.show(WorkspaceRenderer.render(dependencies, resolvers)))
-      IO.write(projectDir / "toolchains/BUILD", StarlarkProgram.show(ScalaToolchainRenderer.render(scalacJvmFlags)))
+      IO.write(projectDir / "toolchains/BUILD", StarlarkProgram.show(ScalaToolchainRenderer.render))
     }
 
     def writeModules(): Unit = modules.foreach { mod =>
