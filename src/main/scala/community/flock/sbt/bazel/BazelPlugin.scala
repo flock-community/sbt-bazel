@@ -34,7 +34,7 @@ object BazelPlugin extends AutoPlugin {
     val projectsMap = currentBuildUnit.defined
     val projectDir = (extracted.currentRef / Keys.baseDirectory).get(data).getOrElse(sys.error("Impossible"))
     val rootDir = (ThisBuild / buildRoot).get(data) getOrElse projectDir
-    val bzlVersion = (ThisBuild / bazelVersion).get(data) getOrElse "4.2.2"
+    val bzlVersion = (ThisBuild / bazelVersion).get(data) getOrElse "5.1.1"
     val internalDeps = projectsMap.values.toList.map(p => (p.id, p.dependencies.flatMap(dep => projectsMap.get(dep.project.project)).map(_.id).toSet)).toMap
 
     val moduleMap = buildStructure.allProjectRefs.flatMap { p =>

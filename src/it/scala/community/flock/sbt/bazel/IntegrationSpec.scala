@@ -29,13 +29,14 @@ class IntegrationSpec extends munit.FunSuite {
 
   private def writeBazelrc(path: Path): Path = {
     val bazelRcPath = path.resolve(".bazelrc")
-    val contents =
-      s"""build --bes_results_url=https://app.buildbuddy.io/invocation/
-         |build --bes_backend=grpcs://remote.buildbuddy.io
-         |build --remote_cache=grpcs://remote.buildbuddy.io
-         |build --remote_header=x-buildbuddy-api-key=${System.getenv("BUILDBUDDY_API_KEY")}
-         |build --remote_timeout=3600
-         |""".stripMargin
+    val contents = "build --incompatible_java_common_parameters=false "
+//    val contents =
+//      s"""build --bes_results_url=https://app.buildbuddy.io/invocation/
+//         |build --bes_backend=grpcs://remote.buildbuddy.io
+//         |build --remote_cache=grpcs://remote.buildbuddy.io
+//         |build --remote_header=x-buildbuddy-api-key=${System.getenv("BUILDBUDDY_API_KEY")}
+//         |build --remote_timeout=3600
+//         |""".stripMargin
 
     Files.write(bazelRcPath, contents.getBytes(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
   }

@@ -2,7 +2,6 @@ package community.flock.sbt.bazel.starlark
 
 sealed trait StarlarkExpr { self =>
   def stmt: StarlarkStmt = StarlarkStmt.Expr(self)
-  def assign(to: String): StarlarkStmt = StarlarkStmt.Assign(to, self)
 }
 
 object StarlarkExpr {
