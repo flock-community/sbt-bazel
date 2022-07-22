@@ -8,11 +8,12 @@ import scala.sys.process.*
 class IntegrationSpec extends munit.FunSuite {
 
   test("should install sbt project") {
-    val path = fileFromPath("/simple-zio-project")
+    val path = fileFromPath("/simple-zio1-project")
     writePluginFile(path)
     writeBazelrc(path)
     assertEquals(run(path, "sbt bazelInstall"), 0)
     assertEquals(run(path, "bazel build //modules/api"), 0)
+    assertEquals(run(path, "bazel test //modules/services:services_test"), 0)
   }
 
   private def fileFromPath(path: String): Path =
@@ -29,9 +30,14 @@ class IntegrationSpec extends munit.FunSuite {
 
   private def writeBazelrc(path: Path): Path = {
     val bazelRcPath = path.resolve(".bazelrc")
-    val local = "build --incompatible_java_common_parameters=false"
+    val local =
+      """build --strategy=Scalac=worker
+        |build --worker_sandboxing
+        |build --incompatible_java_common_parameters=false""".stripMargin
     val remote =
       s"""build --incompatible_java_common_parameters=false
+         |build --strategy=Scalac=worker
+         |build --worker_sandboxing
          |
          |build --bes_results_url=https://app.buildbuddy.io/invocation/
          |build --bes_backend=grpcs://remote.buildbuddy.io

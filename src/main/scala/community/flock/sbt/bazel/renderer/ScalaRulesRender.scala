@@ -1,12 +1,15 @@
 package community.flock.sbt.bazel.renderer
 
 import community.flock.sbt.bazel.core.{BuildDependency, BuildModule}
-import community.flock.sbt.bazel.starlark.{Starlark, StarlarkExpr, StarlarkPrimitive, StarlarkProgram}
+import community.flock.sbt.bazel.features.{Feature, TestSetup}
+import community.flock.sbt.bazel.starlark.{Starlark, StarlarkExpr, StarlarkProgram}
 import sbt.*
 
 final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
 
   def toBuild(module: BuildModule) = {
+    val framework = module.features.collectFirst { case Feature.Test(setup) => setup }
+
     def buildArgs(name: String, dirType: String, plugins: Set[String], deps: Set[String]): Map[String, StarlarkExpr] =
       Map(
         "name" -> Starlark.string(name).expr,
@@ -39,7 +42,14 @@ final class ScalaRulesRender(artifactRef: ArtifactReferenceRenderer) {
         val internal = Set(s":${module.name}")
         val baseArgs = buildArgs(s"${module.name}_$testType", testType, plugins, test ++ internal)
 
-        Option(Starlark.functionNamed("scala_library", baseArgs).stmt)
+        framework.map {
+          case TestSetup.Specs2 =>
+            Starlark.functionNamed(s"scala_specs2_junit_test", baseArgs ++ Map("suffixes" -> Starlark.list(List(Starlark.string("Spec"), Starlark.string("Test"))).expr)).stmt
+          case TestSetup.Scalatest =>
+            Starlark.functionNamed(s"scala_test", baseArgs).stmt
+          case TestSetup.JUnit =>
+            Starlark.functionNamed(s"scala_junit_test", baseArgs ++ Map("suffixes" -> Starlark.list(List(Starlark.string("Spec"), Starlark.string("Test"))).expr)).stmt
+        }
       } else {
         Option.empty
       }

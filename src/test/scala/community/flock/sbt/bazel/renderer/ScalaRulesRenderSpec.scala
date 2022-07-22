@@ -1,6 +1,7 @@
 package community.flock.sbt.bazel.renderer
 
 import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule, BuildProjectDependency}
+import community.flock.sbt.bazel.features.{Feature, TestSetup}
 import community.flock.sbt.bazel.starlark.{Starlark, StarlarkProgram}
 
 import java.nio.file.Path
@@ -68,21 +69,66 @@ class ScalaRulesRenderSpec  extends munit.FunSuite {
     assertEquals(output, expected)
   }
 
-  test("output library and test definition") {
+  test("output library and junit test definition") {
     val render = new ScalaRulesRender(BazelDepsRenderer)
     val output = render.toBuild(
       BuildModule(
         name = moduleName,
         directory = Path.of(moduleName),
         dependencies = List(fs2, itext, munit),
-        dependsOn = Set(BuildProjectDependency("mod_b", "mod_b"))
+        dependsOn = Set(BuildProjectDependency("mod_b", "mod_b")),
+        features = List(Feature.Test(TestSetup.JUnit))
       )
     )
 
     val expected = StarlarkProgram(
       List(
         Starlark.functionNamed("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//mod_b:mod_b"), Nil, "main")).stmt,
-        Starlark.functionNamed("scala_library", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", s":$moduleName"), Nil, "test")).stmt
+        Starlark.functionNamed("scala_junit_test", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", s":$moduleName"), Nil, "test") ++ Map("suffixes" -> Starlark.list(List(Starlark.string("Spec"), Starlark.string("Test"))).expr)).stmt
+      )
+    )
+
+    assertEquals(output, expected)
+  }
+
+  test("output library and specs2 test definition") {
+    val render = new ScalaRulesRender(BazelDepsRenderer)
+    val output = render.toBuild(
+      BuildModule(
+        name = moduleName,
+        directory = Path.of(moduleName),
+        dependencies = List(fs2, itext, munit),
+        dependsOn = Set(BuildProjectDependency("mod_b", "mod_b")),
+        features = List(Feature.Test(TestSetup.Specs2))
+      )
+    )
+
+    val expected = StarlarkProgram(
+      List(
+        Starlark.functionNamed("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//mod_b:mod_b"), Nil, "main")).stmt,
+        Starlark.functionNamed("scala_specs2_junit_test", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", s":$moduleName"), Nil, "test") ++ Map("suffixes" -> Starlark.list(List(Starlark.string("Spec"), Starlark.string("Test"))).expr)).stmt
+      )
+    )
+
+    assertEquals(output, expected)
+  }
+
+  test("output library and scalatest test definition") {
+    val render = new ScalaRulesRender(BazelDepsRenderer)
+    val output = render.toBuild(
+      BuildModule(
+        name = moduleName,
+        directory = Path.of(moduleName),
+        dependencies = List(fs2, itext, munit),
+        dependsOn = Set(BuildProjectDependency("mod_b", "mod_b")),
+        features = List(Feature.Test(TestSetup.Scalatest))
+      )
+    )
+
+    val expected = StarlarkProgram(
+      List(
+        Starlark.functionNamed("scala_library", baseArgs(moduleName, List("@jvm_deps//:co_fs2_fs2_core_2_13", "@jvm_deps//:itext_itext", "//mod_b:mod_b"), Nil, "main")).stmt,
+        Starlark.functionNamed("scala_test", baseArgs(s"${moduleName}_test", List("@jvm_deps//:org_scalameta_munit_2_13", s":$moduleName"), Nil, "test")).stmt
       )
     )
 

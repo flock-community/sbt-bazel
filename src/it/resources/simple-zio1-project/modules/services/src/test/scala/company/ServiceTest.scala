@@ -3,8 +3,9 @@ package company
 
 import zio.test._
 import zio.test.environment._
+import zio.test.junit.JUnitRunnableSpec
 
-object ServiceTest extends DefaultRunnableSpec {
+class ServiceTest extends JUnitRunnableSpec {
    def spec = suite("HelloWorldSpec")(
     testM("sayHello correctly displays output") {
       for {

@@ -1,5 +1,6 @@
 package community.flock.sbt.bazel.renderer
 
+import community.flock.sbt.bazel.features.{Feature, TestSetup}
 import community.flock.sbt.bazel.starlark.{Argument, Starlark, StarlarkProgram, StarlarkStmt}
 
 final case class BazelRule(name: String, version: String, sha256: String, url: String, archiveType: Option[String] = None, stripPrefix: Option[String] = None)
@@ -17,7 +18,7 @@ object WorkspaceRenderer {
     val all = List(skylib, go, gazelle, scala, jvmExternal, docker)
   }
 
-  def render(dependencies: Set[String], resolvers: Set[String], scalaV: String = "2.13.8"): StarlarkProgram = {
+  def render(dependencies: Set[String], resolvers: Set[String], features: Set[Feature], scalaV: String = "2.13.8"): StarlarkProgram = {
     val httpLoad = StarlarkStmt.Load("@bazel_tools//tools/build_defs/repo:http.bzl", List(Argument.Literal("http_archive")))
     val rulesImport = rules.all.map(httpArchiveRule)
     val initStatements = List(
@@ -43,20 +44,41 @@ object WorkspaceRenderer {
       Starlark.functionNamed("rules_jvm_external_setup", Map.empty).stmt,
       StarlarkStmt.Load("@rules_jvm_external//:defs.bzl", List(Argument.Literal("maven_install"))),
       Starlark.functionNamed("maven_install", Map("artifacts" -> Starlark.list(dependencies.map(Starlark.string).toList).expr, "repositories" -> Starlark.list(resolvers.map(Starlark.string).toList).expr)).stmt,
-
-      // docker
-      StarlarkStmt.Load("@io_bazel_rules_docker//toolchains/docker:toolchain.bzl", List(Argument.Named("docker_toolchain_configure", Starlark.string("toolchain_configure").expr))),
-      StarlarkStmt.Load("@io_bazel_rules_docker//repositories:repositories.bzl", List(Argument.Named("container_repositories", Starlark.string("repositories").expr))),
-      Starlark.functionNamed("container_repositories", Map.empty).stmt,
-      StarlarkStmt.Load("@io_bazel_rules_docker//repositories:deps.bzl", List(Argument.Named("container_deps", Starlark.string("deps").expr))),
-      Starlark.functionNamed("container_deps", Map.empty).stmt,
-      StarlarkStmt.Load("@io_bazel_rules_docker//container:container.bzl", List(Argument.Literal("container_pull"))),
-      Starlark.functionNamed("container_pull", Map("name" -> Starlark.string("java_base").expr, "registry" -> Starlark.string("gcr.io").expr, "repository" -> Starlark.string("distroless/java").expr, "digest" -> Starlark.string("sha256:deadbeef").expr)).stmt,
-      StarlarkStmt.Load("@io_bazel_rules_docker//scala:image.bzl", List(Argument.Named("_scala_image_repos", Starlark.string("repositories").expr))),
-      Starlark.functionNamed("_scala_image_repos", Map.empty).stmt
     )
 
-    StarlarkProgram.of(httpLoad +: (rulesImport ++ initStatements))
+    val featureStatements = features.foldLeft(List.empty[StarlarkStmt]) { case (acc, feature) =>
+      acc ++ (feature match {
+        case Feature.Docker =>
+          List(
+            StarlarkStmt.Load("@io_bazel_rules_docker//toolchains/docker:toolchain.bzl", List(Argument.Named("docker_toolchain_configure", Starlark.string("toolchain_configure").expr))),
+            StarlarkStmt.Load("@io_bazel_rules_docker//repositories:repositories.bzl", List(Argument.Named("container_repositories", Starlark.string("repositories").expr))),
+            Starlark.functionNamed("container_repositories", Map.empty).stmt,
+            StarlarkStmt.Load("@io_bazel_rules_docker//repositories:deps.bzl", List(Argument.Named("container_deps", Starlark.string("deps").expr))),
+            Starlark.functionNamed("container_deps", Map.empty).stmt,
+            StarlarkStmt.Load("@io_bazel_rules_docker//container:container.bzl", List(Argument.Literal("container_pull"))),
+            Starlark.functionNamed("container_pull", Map("name" -> Starlark.string("java_base").expr, "registry" -> Starlark.string("gcr.io").expr, "repository" -> Starlark.string("distroless/java").expr, "digest" -> Starlark.string("sha256:deadbeef").expr)).stmt,
+            StarlarkStmt.Load("@io_bazel_rules_docker//scala:image.bzl", List(Argument.Named("_scala_image_repos", Starlark.string("repositories").expr))),
+            Starlark.functionNamed("_scala_image_repos", Map.empty).stmt
+          )
+
+        case Feature.Test(framework) =>
+          val repr = framework match {
+            case TestSetup.JUnit => "junit"
+            case TestSetup.Specs2 => "specs2_junit"
+            case TestSetup.Scalatest => "scalatest"
+          }
+
+          List(
+            StarlarkStmt.Load(s"@io_bazel_rules_scala//testing:$repr.bzl", List(Argument.Literal(s"${repr}_repositories"), Argument.Literal(s"${repr}_toolchain"))),
+            Starlark.functionNamed(s"${repr}_repositories", Map.empty).stmt,
+            Starlark.functionNamed(s"${repr}_toolchain", Map.empty).stmt,
+          )
+
+        case _ => Nil
+      })
+    }
+
+    StarlarkProgram.of(httpLoad +: (rulesImport ++ initStatements ++ featureStatements))
   }
 
 

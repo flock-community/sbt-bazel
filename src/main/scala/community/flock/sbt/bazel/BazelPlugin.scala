@@ -1,6 +1,7 @@
 package community.flock.sbt.bazel
 
-import community.flock.sbt.bazel.core.{BuildArtifactId, BuildDependency, BuildDependencyConfiguration, BuildModule, BuildProjectDependency, BuildResolver}
+import community.flock.sbt.bazel.core.*
+import community.flock.sbt.bazel.features.{DockerFeatureExtractor, MUnitTestFeatureExtractor, ScalatestTestFeatureExtractor, Specs2TestFeatureExtractor, ZioTestFeatureExtractor}
 import community.flock.sbt.bazel.renderer.*
 import community.flock.sbt.bazel.starlark.StarlarkProgram
 import sbt.*
@@ -36,6 +37,7 @@ object BazelPlugin extends AutoPlugin {
     val rootDir = (ThisBuild / buildRoot).get(data) getOrElse projectDir
     val bzlVersion = (ThisBuild / bazelVersion).get(data) getOrElse "5.1.1"
     val internalDeps = projectsMap.values.toList.map(p => (p.id, p.dependencies.flatMap(dep => projectsMap.get(dep.project.project)).map(_.id).toSet)).toMap
+    val extractor = DockerFeatureExtractor ++ MUnitTestFeatureExtractor ++ ScalatestTestFeatureExtractor ++ ZioTestFeatureExtractor ++ Specs2TestFeatureExtractor
 
     val moduleMap = buildStructure.allProjectRefs.flatMap { p =>
       for {
@@ -57,7 +59,7 @@ object BazelPlugin extends AutoPlugin {
             BuildResolver.Ivy(repo.name, ivyPatterns, None)
         }
 
-        BuildModule(
+        val module = BuildModule(
           name = name,
           directory = moduleDir,
           dependencies = deps.map(d => toDependency(d, scalaFullVersion, scalaBinaryVersion)).toList,
@@ -66,21 +68,27 @@ object BazelPlugin extends AutoPlugin {
           scalacOptions = scalacOpts.map(_.toList).getOrElse(List.empty),
           scalacCompilerOptions = scalacCompilerOpts.getOrElse(List.empty)
         )
+
+        module.withFeatures(extractor.extract(module))
       }
     }.filter(!_.name.contains("root")).map(x => x.name -> x).toMap
-
 
     val modules = moduleMap.map { case (name, mod) =>
       mod.withDependsOn(internalDeps.getOrElse(name, Set.empty).flatMap(key => moduleMap.get(key).map(x => BuildProjectDependency(key, x.directory.toString))))
     }
 
+    val features = modules.flatMap(_.features).toSet
+
     def writeSetup(): Unit = {
       val dependencies = modules.flatMap(_.dependencies).toSet.map(BazelFormatting.versionedRef)
       val resolvers = modules.flatMap(_.resolvers).map(_.show).toSet
 
-      IO.write(projectDir / "WORKSPACE", StarlarkProgram.show(WorkspaceRenderer.render(dependencies, resolvers)))
+      IO.write(projectDir / "WORKSPACE", StarlarkProgram.show(WorkspaceRenderer.render(dependencies, resolvers, features)))
       IO.write(projectDir / "toolchains/BUILD", StarlarkProgram.show(ScalaToolchainRenderer.render))
     }
+
+    def writePrelude(): Unit =
+      IO.write(projectDir / "tools/build_rules/prelude_bazel", StarlarkProgram.show(PreludeRenderer(features)))
 
     def writeModules(): Unit = modules.foreach { mod =>
       val artifact = renderer.render(projectDir / mod.directory.toString, mod)
@@ -89,7 +97,6 @@ object BazelPlugin extends AutoPlugin {
 
     def writePrerequisites(): Unit = {
       IO.write(projectDir / ".bazelversion", bzlVersion.getBytes())
-      IO.write(projectDir / "tools/build_rules/prelude_bazel", getClass.getResourceAsStream("/prelude.bzl").readAllBytes())
       IO.write(projectDir / "tools/build_rules/BUILD", Array.emptyByteArray)
       IO.write(projectDir / "tools/BUILD", Array.emptyByteArray)
       IO.write(projectDir / "BUILD", Array.emptyByteArray)
@@ -97,6 +104,7 @@ object BazelPlugin extends AutoPlugin {
 
     writePrerequisites()
     writeSetup()
+    writePrelude()
     writeModules()
 
     s
